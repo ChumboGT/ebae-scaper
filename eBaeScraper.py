@@ -1,4 +1,5 @@
 import math
+import re
 
 def round_up(n, int=0):
     multiplier = 10 ** int
@@ -18,17 +19,18 @@ item_names = []
 item_prices = []
 new_item_bool = []
 item_urls = []
-#https://www.ebay.com/sch/1920-29/37832/i.html?_ssn=the-ad-store&_fosrp=1&_pgn=3
-#https://www.ebay.com/sch/1920-29/37832/m.html?_ssn=the-ad-store
-#ebay_store_url = 'https://www.ebay.com/sch/1920-29/37832/i.html?_ssn=the-ad-store&_fosrp=1&_pgn=3'
-incomplete_ebay_url = 'https://www.ebay.com/sch/1920-29/37832/i.html?_ssn=the-ad-store&_fosrp=1&_pgn='
+item_ebay_numbers = []
+#incomplete_ebay_url = 'https://www.ebay.com/sch/1920-29/37832/i.html?_ssn=the-ad-store&_fosrp=1&_pgn='
+incomplete_ebay_url = 'https://www.ebay.com/sch/m.html?_trkparms=folent%3Abestbid_01%7Cfolenttp%3A1&_ssn=bestbid_01&_pgn='
 data=get_request_data(incomplete_ebay_url + "1")
 
 soup = BeautifulSoup(data, "html.parser")
-
+item_num_lis = soup.find_all(text='			Item:')
+#<li>			Item: 155093865935</li>
 record_count = int(soup.find('span', attrs={'class': 'rcnt'}).contents[0].replace(',',''))
 total_pages = int(round_up(record_count/60))
 print(type(total_pages))
+
 
 for page_num in range(1,total_pages):
     pagedata = get_request_data(get_ebay_url(page_num))
@@ -60,15 +62,16 @@ for page_num in range(1,total_pages):
                 prod_price=f"{price}"
                 item_prices.append(prod_price)
 
-        #Get the Ebay Item Number
-            ul_lvdetails = listing.find()
 
+#Get the Item Numbers form the URLs
+for item_url in item_urls:
+    item_ebay_numbers.append(item_url.removeprefix("https://www.ebay.com/itm/").split('?', 1)[0])
 
 from scipy import stats
 import numpy as np
 import pandas as pd
 
-df = pd.DataFrame({"New Listing":new_item_bool,"Name":item_names, "Price": item_prices, "Url": item_urls})
+df = pd.DataFrame({"New Listing":new_item_bool,"Name":item_names, "Price": item_prices, "Url": item_urls, "Item Number": item_ebay_numbers})
 df.to_csv('C:\_git\python\eBayScraperthe-ad-store-listings.csv')
 #data_note_8 = data_note_8.ilociloc[np.abs(stats.zscore(data_note_8["Prices"])) lt; 3,]
 #print(response)

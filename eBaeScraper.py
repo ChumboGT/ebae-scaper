@@ -24,14 +24,18 @@ incomplete_ebay_url = 'https://www.ebay.com/sch/m.html?_trkparms=folent%3Abestbi
 data=get_request_data(incomplete_ebay_url + "1")
 
 soup = BeautifulSoup(data, "html.parser")
-item_num_lis = soup.find_all(text='			Item:')
-#<li>			Item: 155093865935</li>
+
 record_count = int(soup.find('span', attrs={'class': 'rcnt'}).contents[0].replace(',',''))
 total_pages = int(round_up(record_count/60))
 print(type(total_pages))
 
+upper_range = int(9999)
+if upper_range >= total_pages:
+    upper_range = total_pages
 
-for page_num in range(1,total_pages):
+
+for page_num in range(1,upper_range):
+    print(f"processing page -> {page_num}")
     pagedata = get_request_data(get_ebay_url(page_num))
     listing_page = soup.find_all('li', attrs={'class': 'sresult'})
     for listing in listing_page:
@@ -40,6 +44,7 @@ for page_num in range(1,total_pages):
         new_prod = 0
         
         h3_lvtitle = listing.find('h3', attrs={'class':"lvtitle"})
+        print(f"processing listing {h3_lvtitle.a['href']}")
 
         if (h3_lvtitle.a.title!="Nothing"):
             title = str(h3_lvtitle.a.contents[0]).replace("\r","").replace("\n","").replace("\t","")
@@ -61,20 +66,47 @@ for page_num in range(1,total_pages):
                 prod_price=f"{price}"
                 item_prices.append(prod_price)
 
+listing_info = []
+#fields to generate listing-details.csv
+cat_item_numbers = []
+cat_names = []
+cat_links = []
+i = int(1)
+num_urls = item_urls.count
 
-#Get the Item Numbers form the URLs
 for item_url in item_urls:
-    item_ebay_numbers.append(item_url.removeprefix("https://www.ebay.com/itm/").split('?', 1)[0])
+    #Get the Item Numbers form the URLs
+    item_number = item_url.removeprefix("https://www.ebay.com/itm/").split('?', 1)[0]
+    print(f"{i}/{num_urls}: processing eBay item number: {item_number}")
+    item_ebay_numbers.append(item_number)
+
+    item_page_data=get_request_data(item_url)
+    soup = BeautifulSoup(item_page_data, "html.parser")
+
+    category_links = soup.find_all('a', attrs={'class': 'seo-breadcrumb-text'})
+
+    for link in category_links:
+        cat_item_numbers.append(item_number)
+        cat_names.append(link.contents[1].contents[0])
+        cat_links.append(link['href'])
+
+    #TODO: Extract data from the page data of each item
 
 from scipy import stats
 import numpy as np
 import pandas as pd
 
+#TODO: Dynamic naming for files
+
+print("Writing Listing Data File")
 df = pd.DataFrame({"New Listing":new_item_bool,"Name":item_names, "Price": item_prices, "Url": item_urls, "Item Number": item_ebay_numbers})
-df.to_csv('C:\_git\python\eBayScraperthe-ad-store-listings.csv')
-#data_note_8 = data_note_8.ilociloc[np.abs(stats.zscore(data_note_8["Prices"])) lt; 3,]
-#print(response)
-#print(soup)
+df.to_csv('C:\_git\python\eBayScraper-listings.csv')
+
+print("Writing Listing Detail File")
+category_data_frame = pd.DataFrame({"Item Numbers":cat_item_numbers,"Category Name":cat_names, "Category URL":cat_links})
+category_data_frame.to_csv('C:\_git\python\eBayScraper-listing-details.csv')
+
+print("COMPLETE!")
 
 # ToDo:
 # 1) Pull the URLs for the Items!

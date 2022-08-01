@@ -106,11 +106,26 @@ import numpy as np
 import pandas as pd
 
 print("Writing Listing Data File")
-df = pd.DataFrame({"New Listing":new_item_bool,"Name":item_names, "Price": item_prices, "Url": item_urls, "Item Number": item_ebay_numbers, "Image URL":img_links})
+df = pd.DataFrame(
+    {
+        "New Listing":new_item_bool,
+        "Name":item_names, 
+        "Price": item_prices, 
+        "Url": item_urls, 
+        "Item Number": item_ebay_numbers, 
+        "Image URL":img_links
+    }
+)
 df.to_csv('C:\_git\python\eBayScraper-listings.csv')
 
 print("Writing Listing Detail File")
-category_data_frame = pd.DataFrame({"Item Numbers":cat_item_numbers,"Category Name":cat_names, "Category URL":cat_links})
+category_data_frame = pd.DataFrame(
+    {
+        "Item Numbers":cat_item_numbers,
+        "Category Name":cat_names,
+        "Category URL":cat_links
+    }
+)
 category_data_frame.to_csv('C:\_git\python\eBayScraper-listing-details.csv')
 
 print("COMPLETE!")

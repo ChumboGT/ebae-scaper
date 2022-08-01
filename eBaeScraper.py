@@ -29,7 +29,7 @@ record_count = int(soup.find('span', attrs={'class': 'rcnt'}).contents[0].replac
 total_pages = int(round_up(record_count/60))
 print(type(total_pages))
 
-upper_range = int(9999)
+upper_range = int(999)
 if upper_range >= total_pages:
     upper_range = total_pages
 
@@ -66,13 +66,17 @@ for page_num in range(1,upper_range):
                 prod_price=f"{price}"
                 item_prices.append(prod_price)
 
+from datetime import datetime
+
+print(f"~~~Begin Processing Listing Details @ {datetime.now()}~~~")
 listing_info = []
 #fields to generate listing-details.csv
 cat_item_numbers = []
 cat_names = []
 cat_links = []
+img_links = []
 i = int(1)
-num_urls = item_urls.count
+num_urls = len(item_urls)
 
 for item_url in item_urls:
     #Get the Item Numbers form the URLs
@@ -90,16 +94,19 @@ for item_url in item_urls:
         cat_names.append(link.contents[1].contents[0])
         cat_links.append(link['href'])
 
-    #TODO: Extract data from the page data of each item
+    image_src = soup.find_all('img', attrs={'class':['img','img500'], 'id':'icImg'})[0]['src']
+    img_links.append(image_src)
+
+    i=i+1
+
+#TODO: Dynamic naming for files
 
 from scipy import stats
 import numpy as np
 import pandas as pd
 
-#TODO: Dynamic naming for files
-
 print("Writing Listing Data File")
-df = pd.DataFrame({"New Listing":new_item_bool,"Name":item_names, "Price": item_prices, "Url": item_urls, "Item Number": item_ebay_numbers})
+df = pd.DataFrame({"New Listing":new_item_bool,"Name":item_names, "Price": item_prices, "Url": item_urls, "Item Number": item_ebay_numbers, "Image URL":img_links})
 df.to_csv('C:\_git\python\eBayScraper-listings.csv')
 
 print("Writing Listing Detail File")
